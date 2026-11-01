@@ -4,6 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from playwright.sync_api import sync_playwright
 from google import genai
+from google.genai.errors import APIError
 
 # Setup Gemini API using the new client structure
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -34,7 +35,7 @@ def fetch_rendered_text():
     return scraped_data
 
 def generate_hockey_email(data):
-    """Uses Gemini 2.0 Flash to write a funny, stat-based HTML email."""
+    """Uses Gemini to write a funny, stat-based HTML email with built-in model fallback."""
     prompt = f"""
     You are the official, hilarious, stat-loving "Beat Writer & Locker Room Analyst" for our adult rec league hockey team, **Draft League**.
     
@@ -71,10 +72,26 @@ def generate_hockey_email(data):
        - A hilarious, hyper-specific score and game event prediction.
     """
     
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-    )
+    # List of models to try in order of preference (latest stable flash models)
+    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.8-flash"]
+    
+    response = None
+    for model_name in models_to_try:
+        try:
+            print(f"Attempting generation with model: {model_name}...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            if response and response.text:
+                break
+        except APIError as e:
+            print(f"Model {model_name} failed with error: {e}. Trying next fallback...")
+            continue
+            
+    if not response or not response.text:
+        raise Exception("All model fallback options failed to generate content.")
+        
     return response.text.replace("```html", "").replace("```", "").strip()
 
 def send_email(html_body):
