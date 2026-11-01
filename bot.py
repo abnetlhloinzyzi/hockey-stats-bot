@@ -34,7 +34,7 @@ def fetch_rendered_text():
     return scraped_data
 
 def generate_hockey_email(data):
-    """Uses Gemini 2.5 Flash to write a funny, stat-based HTML email."""
+    """Uses Gemini 2.0 Flash to write a funny, stat-based HTML email."""
     prompt = f"""
     You are the official, hilarious, stat-loving "Beat Writer & Locker Room Analyst" for our adult rec league hockey team, **Draft League**.
     
@@ -72,7 +72,7 @@ def generate_hockey_email(data):
     """
     
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         contents=prompt,
     )
     return response.text.replace("```html", "").replace("```", "").strip()
