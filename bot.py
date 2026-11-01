@@ -3,11 +3,11 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from playwright.sync_api import sync_playwright
-import google.generativeai as genai
+from google import genai
 
-# Setup Gemini API
+# Setup Gemini API using the new client structure
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Web pages to scrape
 URLS = {
@@ -27,7 +27,6 @@ def fetch_rendered_text():
         for key, url in URLS.items():
             print(f"Scraping {key} from {url}...")
             page.goto(url, wait_until="networkidle")
-            # Extract plain text content rendered by JavaScript
             text_content = page.evaluate("document.body.innerText")
             scraped_data[key] = text_content[:4000] # Cap text per page to avoid context overflow
             
@@ -35,9 +34,7 @@ def fetch_rendered_text():
     return scraped_data
 
 def generate_hockey_email(data):
-    """Uses Gemini 1.5 Flash to write a funny, stat-based HTML email."""
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    
+    """Uses Gemini 2.5 Flash to write a funny, stat-based HTML email."""
     prompt = f"""
     You are the official, hilarious, stat-loving "Beat Writer & Locker Room Analyst" for our adult rec league hockey team, **Draft League**.
     
@@ -74,7 +71,10 @@ def generate_hockey_email(data):
        - A hilarious, hyper-specific score and game event prediction (e.g., "Draft League wins 5-4, 82% chance Dave forgets his water bottle").
     """
     
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
     return response.text.replace("```html", "").replace("```", "").strip()
 
 def send_email(html_body):
