@@ -68,7 +68,7 @@ def generate_hockey_email(data):
        - Opponent overview & "Tale of the Tape" stat comparison.
        - Key matchup to watch.
        - Goalie duel prediction.
-       - A hilarious, hyper-specific score and game event prediction (e.g., "Draft League wins 5-4, 82% chance Dave forgets his water bottle").
+       - A hilarious, hyper-specific score and game event prediction.
     """
     
     response = client.models.generate_content(
