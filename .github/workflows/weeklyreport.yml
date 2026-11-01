@@ -9,6 +9,9 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write  # <-- Required for workflow dispatch / action triggers
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
