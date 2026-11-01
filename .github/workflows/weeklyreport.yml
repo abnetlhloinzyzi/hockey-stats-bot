@@ -4,14 +4,14 @@ on:
   schedule:
     # Runs every Monday at 13:00 UTC (8:00 AM EST)
     - cron: '0 13 * * 1'
-  workflow_dispatch: # Allows you to manually trigger it from GitHub anytime!
+  workflow_dispatch: # Allows manual trigger from GitHub anytime
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write  # <-- Required for workflow dispatch / action triggers
+      actions: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
