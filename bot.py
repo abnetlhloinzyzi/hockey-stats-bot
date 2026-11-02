@@ -1,5 +1,6 @@
 import os
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from playwright.sync_api import sync_playwright
@@ -15,7 +16,7 @@ URLS = {
     "skaters": "https://foundryadulthockey.com/player-stats/?league=48&season=177&stat_class=5",
     "goalies": "https://foundryadulthockey.com/goalie-stats/?league=48&season=177&stat_class=5",
     "schedule": "https://foundryadulthockey.com/team-page/?team=15838&league=48&season=177&tab=schedule&stat_class=5",
-    "roster": "https://foundryadulthockey.com/team-page/?team=15838&league=48&season=177&stat_class=5&tab=roster"
+    "roster": "https://foundryadulthockey.com/team-page/?team=15838&league=48&season=177&tab=roster"
 }
 
 def fetch_rendered_text():
@@ -35,9 +36,15 @@ def fetch_rendered_text():
     return scraped_data
 
 def generate_hockey_email(data):
-    """Uses Gemini to write a funny, stat-based HTML email with built-in model fallback."""
+    """Uses Gemini to write a funny, stat-based HTML email with strict schedule anchoring."""
+    today_str = datetime.today().strftime('%A, %B %d, %Y')
+    
     prompt = f"""
     You are the official, hilarious, stat-loving "Beat Writer & Locker Room Analyst" for our adult rec league hockey team, **Draft League**.
+    
+    CRITICAL TIME ANCHOR:
+    - Today's current date is: **{today_str}**. 
+    - Use this date to strictly differentiate between past games (The Look-Back) and the next upcoming game (The Pre-Game Preview). Do not confuse past game results with upcoming fixtures.
     
     Here is the scraped stats and schedule data from our league website:
     --- SKATER STATS ---
@@ -61,19 +68,21 @@ def generate_hockey_email(data):
     
     EMAIL CONTENT STRUCTURE:
     1. **Catchy Email Subject Line** (at the very top in a designated <h2> or banner).
-    2. **Part 1: The Look-Back (Last Game Breakdown)**
+    2. **Part 1: The Look-Back (The Most Recent Past Game)**
+       - Identify the most recent game that occurred *before* {today_str}.
        - Headline roast/praise.
-       - "By the Numbers": 3 key statistics from the last game.
+       - "By the Numbers": 3 key statistics from that specific game.
        - "Star of the Game" & "Unsung Hero" (highlight hilarious metrics like PIMs or long droughts).
-    3. **Part 2: The Pre-Game Preview (Impending Matchup)**
+    3. **Part 2: The Pre-Game Preview (The Next Upcoming Matchup)**
+       - Identify the next game scheduled *after* {today_str} and name the actual opponent.
        - Opponent overview & "Tale of the Tape" stat comparison.
        - Key matchup to watch.
        - Goalie duel prediction.
        - A hilarious, hyper-specific score and game event prediction.
     """
     
-    # List of models to try in order of preference (latest stable flash models)
-    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.8-flash"]
+    # Updated to latest stable model options with fallback
+    models_to_try = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"]
     
     response = None
     for model_name in models_to_try:
